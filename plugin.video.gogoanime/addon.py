@@ -12,6 +12,9 @@ import os
 import re
 import xbmc
 import xbmcplugin
+import string
+
+digs = string.digits + string.ascii_letters
 
 
 domain = 'https://www2.gogoanime.video'
