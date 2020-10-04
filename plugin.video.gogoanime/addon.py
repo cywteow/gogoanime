@@ -314,6 +314,23 @@ def resolveUrl(url):
         requestUrl = jsonObj['data'][0]['file']
         response2 = requests.get(requestUrl, allow_redirects=False)
         return response2.headers['Location']
+    elif servers["MP4UPLOAD"] in url:
+        response = requests.get(url)
+        document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
+        for script in document:
+            if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
+                it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
+                p = it.group(2)
+                a = int(it.group(3))
+                c = int(it.group(4))
+                k = it.group(5).split("|")
+                c-=1
+                while c > 0:
+                    if k[c] is not None:
+                        p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
+                    c-=1
+                it = re.search("sources:\[{src:\"(.+)\",type", p, flags=0)
+                return it.group(1)
 
 def request(path):
     response = session.get(domain + path)
