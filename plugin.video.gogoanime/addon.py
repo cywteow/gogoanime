@@ -277,7 +277,7 @@ def play_episode():
         resolvedUrl = resolveUrl(sources[position].getProperty("data-video"))
         xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=resolveurl.resolve(url)))
 
-def resolveUrl(url):
+# def resolveUrl(url):
     # servers = {
     #     "VIDSTREAMING": "vidstreaming.io/streaming.php",
     #     "GOGOSERVER": "vidstreaming.io/load.php?id",
