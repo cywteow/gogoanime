@@ -12,9 +12,7 @@ import os
 import re
 import xbmc
 import xbmcplugin
-import string
-
-digs = string.digits + string.ascii_letters
+import resolveurl
 
 
 domain = 'https://www2.gogoanime.video'
@@ -276,64 +274,67 @@ def play_episode():
     if position != -1:
         
         resolvedUrl = resolveUrl(sources[position].getProperty("data-video"))
-        xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=resolvedUrl))
+        xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=resolveurl.resolve(url)))
 
 def resolveUrl(url):
-    servers = {
-        "VIDSTREAMING": "vidstreaming.io/streaming.php",
-        "GOGOSERVER": "vidstreaming.io/load.php?id",
-        "XSTREAMCDN": "fcdn.stream",
-        "MIXDROP": "mixdrop.co",
-        "CLOUD9": "cloud9.to",
-        "MP4UPLOAD": "mp4upload.com"
-    }
+    # servers = {
+    #     "VIDSTREAMING": "vidstreaming.io/streaming.php",
+    #     "GOGOSERVER": "vidstreaming.io/load.php?id",
+    #     "XSTREAMCDN": "fcdn.stream",
+    #     "MIXDROP": "mixdrop.co",
+    #     "CLOUD9": "cloud9.to",
+    #     "MP4UPLOAD": "mp4upload.com"
+    # }
     
 
-    if servers["VIDSTREAMING"] in url:
-        response = requests.get(url)
-        document = BeautifulSoup(response.text, 'html.parser')
-        id = document.find('input', id="id")['value']
-        title = document.find('input', id="title")['value']
-        typesub = document.find('input', id="typesub")['value']
-        parsed_url = urlparse.urlparse(response.url)
-        url = parsed_url.scheme+"://"+parsed_url.hostname+ "/ajax.php?id=" + id+ "&title=" + title +"&typesub=" + typesub
-        response2 = requests.get(url)
-        jsonObj = json.loads(response2.text)
-        return jsonObj['source_bk'][0]['file']
-    elif servers["GOGOSERVER"] in url:
-        response = requests.get(url)
-        document = BeautifulSoup(response.text, 'html.parser')
-        script = document.find('div', class_="videocontent").find('script', type="text/JavaScript")
-        it = re.search("sources:\[{file: \'(.+)\',label:", script.string, flags=0)
-        if it is not None:
-            url = it.group(1)
+    # if servers["VIDSTREAMING"] in url:
+    #     response = requests.get(url)
+    #     document = BeautifulSoup(response.text, 'html.parser')
+    #     id = document.find('input', id="id")['value']
+    #     title = document.find('input', id="title")['value']
+    #     typesub = document.find('input', id="typesub")['value']
+    #     parsed_url = urlparse.urlparse(response.url)
+    #     url = parsed_url.scheme+"://"+parsed_url.hostname+ "/ajax.php?id=" + id+ "&title=" + title +"&typesub=" + typesub
+    #     response2 = requests.get(url)
+    #     jsonObj = json.loads(response2.text)
+    #     return jsonObj['source_bk'][0]['file']
 
-        response2 = requests.get(url, allow_redirects=False)
-        return response2.headers['Location']
-    elif servers["XSTREAMCDN"] in url:
-        parsedUrl = urlparse.urlparse(url).path.split("/")[-1:][0]
-        response = requests.post("https://fcdn.stream/api/source/"+ parsedUrl)
-        jsonObj = json.loads(response.text)
-        requestUrl = jsonObj['data'][0]['file']
-        response2 = requests.get(requestUrl, allow_redirects=False)
-        return response2.headers['Location']
-    elif servers["MP4UPLOAD"] in url:
-        response = requests.get(url)
-        document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
-        for script in document:
-            if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
-                it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
-                p = it.group(2)
-                a = int(it.group(3))
-                c = int(it.group(4))
-                k = it.group(5).split("|")
-                c-=1
-                while c > 0:
-                    if k[c] is not None:
-                        p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
-                    c-=1
-                it = re.search("sources:\[{src:\"(.+)\",type", p, flags=0)
-                return it.group(1)
+    # elif servers["GOGOSERVER"] in url:
+    #     response = requests.get(url)
+    #     document = BeautifulSoup(response.text, 'html.parser')
+    #     script = document.find('div', class_="videocontent").find('script', type="text/JavaScript")
+    #     it = re.search("sources:\[{file: \'(.+)\',label:", script.string, flags=0)
+    #     if it is not None:
+    #         url = it.group(1)
+
+    #     response2 = requests.get(url, allow_redirects=False)
+    #     return response2.headers['Location']
+
+    # elif servers["XSTREAMCDN"] in url:
+    #     parsedUrl = urlparse.urlparse(url).path.split("/")[-1:][0]
+    #     response = requests.post("https://fcdn.stream/api/source/"+ parsedUrl)
+    #     jsonObj = json.loads(response.text)
+    #     requestUrl = jsonObj['data'][0]['file']
+    #     response2 = requests.get(requestUrl, allow_redirects=False)
+    #     return response2.headers['Location']
+
+    # elif servers["MP4UPLOAD"] in url:
+    #     response = requests.get(url)
+    #     document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
+    #     for script in document:
+    #         if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
+    #             it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
+    #             p = it.group(2)
+    #             a = int(it.group(3))
+    #             c = int(it.group(4))
+    #             k = it.group(5).split("|")
+    #             c-=1
+    #             while c > 0:
+    #                 if k[c] is not None:
+    #                     p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
+    #                 c-=1
+    #             it = re.search("sources:\[{src:\"(.+)\",type", p, flags=0)
+    #             return it.group(1)
 
 def request(path):
     response = session.get(domain + path)
@@ -346,28 +347,6 @@ def request2(path):
 
     if response.status_code == 200:
         return response
-
-def int2base(x, base):
-    if x < 0:
-        sign = -1
-    elif x == 0:
-        return digs[0]
-    else:
-        sign = 1
-
-    x *= sign
-    digits = []
-
-    while x:
-        digits.append(digs[int(x % base)])
-        x = int(x / base)
-
-    if sign < 0:
-        digits.append('-')
-
-    digits.reverse()
-
-    return ''.join(digits)
 
 if __name__ == '__main__':
     plugin.run()
