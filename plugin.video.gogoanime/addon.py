@@ -252,12 +252,13 @@ def category():
             div = a.find('div', class_="name")
             name = div.contents[0].string + div.contents[1]
             item = ListItem(name)
-            item.setInfo('video', {'plot': plot})
+            item.setInfo('video', {'plot': plot, 'title': name})
             item.setProperty('IsPlayable', 'true')
             items.append((plugin.url_for(a['href'].strip()), item, False))
 
     xbmcplugin.setContent(plugin.handle, 'videos')
     xbmcplugin.addDirectoryItems(plugin.handle, items, len(items))
+    xbmcplugin.addSortMethod(plugin.handle, xbmcplugin.SORT_METHOD_TITLE)
     xbmcplugin.endOfDirectory(plugin.handle)
 
 @plugin.route('^(/.+)-episode-([0-9]+)$')
