@@ -274,8 +274,8 @@ def play_episode():
 
     if position != -1:
         
-        resolvedUrl = resolveUrl(sources[position].getProperty("data-video"))
-        xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=resolveurl.resolve(url)))
+        # resolvedUrl = resolveUrl(sources[position].getProperty("data-video"))
+        xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=resolveurl.resolve(sources[position].getProperty("data-video"))))
 
 # def resolveUrl(url):
     # servers = {
