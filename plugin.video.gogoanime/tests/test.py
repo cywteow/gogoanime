@@ -12,14 +12,14 @@ session = Session()
 
 domain = 'https://www2.gogoanime.video'
 
-def request(path):
-    response = session.get(domain + path)
+# def request(path):
+#     response = session.get(domain + path)
 
 
-    if response.status_code == 200:
-        return response
-    elif response.status_code == 301:
-        get_redirect_target(response)
+#     if response.status_code == 200:
+#         return response
+#     elif response.status_code == 301:
+#         get_redirect_target(response)
 
 # Recent release
 # response = request("/?page=1")
@@ -120,6 +120,26 @@ def request(path):
 #genre
 # response = requests.get("https://www2.gogoanime.video/genre/action?page=1")
 # document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes")
+
+#category
+response = requests.get("https://www2.gogoanime.video/category/boruto-naruto-next-generations")
+document = BeautifulSoup(response.text, 'html.parser').find('div', class_="anime_info_body_bg")
+img = document.find('img')['src'].encode('utf-8').strip()
+title = document.find('h1').string.encode('utf-8').strip()
+pList = document.find_all('p', class_="type")
+plot = pList[1].contents[1].encode('utf-8').strip()
+
+genre = ""
+for a in pList[2].find_all('a'):
+    genre += a.string.encode('utf-8')
+try:
+    year = pList[3].contents[1].encode('utf-8').strip()
+    year = int(year) if year.isdigit() else None
+except IndexError:
+    year = None
+status = pList[4].contents[1].encode('utf-8').strip()
+
+
 
 
 

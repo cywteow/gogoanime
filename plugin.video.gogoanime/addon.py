@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 from requests import Session
 from rerouting import Rerouting
+from resources.lib.database import InternalDatabase
 from xbmc import Keyboard
 from xbmcgui import Dialog, ListItem
 
@@ -118,6 +119,7 @@ def list_genres():
 
 @plugin.route(r'^/\?page=[0-9]+$')
 def recent_release():
+    InternalDatabase.connect()
     pageNum = int(plugin.query['page'][0])
     response = request(plugin.pathqs)
 
@@ -125,21 +127,14 @@ def recent_release():
     items = []
     for li in document.find_all('li'):
         a = li.find('a')
-        item = ListItem(a['title'].encode('utf-8').strip())
-        item.setArt({'poster': li.find('img')['src']})
+        p = li.find('p', class_="episode")
         it = re.search("^(/.+)-episode-([0-9]+)$", a['href'].encode('utf-8'), flags=0)
-        items.append((plugin.url_for("/category"+it.group(1).encode('utf-8')), item, True))
-        
-        # For category
-        # response2 = request(a['href'])
-        # document2 = BeautifulSoup(response2.text, 'html.parser').find('div', class_="anime-info").find('a')
-        
-        # For plot
-        # response3 = request(document2['href'])
-        # document3 = BeautifulSoup(response3.text, 'html.parser').find('div', class_="anime_info_body_bg")
-        # item.setInfo('video', {'plot': document3.find_all('p', class_="type")[1].contents[1]})
-        
-        # items.append((plugin.url_for(document2['href']), item, True))
+        path = "/category"+it.group(1).encode('utf-8')
+        anime = get_anime_detail(path)
+        item = ListItem(anime['title'] + " " + p.string.encode('utf-8'))
+        item.setArt({'poster': anime.pop('poster')})
+        item.setInfo("video", anime)
+        items.append((plugin.url_for(path), item, True))
     
     item = ListItem("Next >>")
     items.append((plugin.url_for("/?page="+ str(pageNum + 1)), item, True))
@@ -147,23 +142,26 @@ def recent_release():
         item = ListItem("Back to main page")
         items.append((plugin.url_for("/"), item, True))
 
+    InternalDatabase.close()
     xbmcplugin.setContent(plugin.handle, 'videos')
     xbmcplugin.addDirectoryItems(plugin.handle, items, len(items))
     xbmcplugin.endOfDirectory(plugin.handle)
 
 @plugin.route(r'/ajax/page-recent-release-ongoing.html\?page=[0-9]+')
 def on_going():
+    InternalDatabase.connect()
     pageNum = int(plugin.query['page'][0])
     response = request2(plugin.pathqs)
     document = BeautifulSoup(response.text, 'html.parser').find('div', class_="added_series_body popular")
     items = []
     for li in document.find_all('li'):
-        a = li.find('a')
-        item = ListItem(a['title'].encode('utf-8').strip())
-        style = li.find('div', class_="thumbnail-popular")['style']
-        it = re.search("^background: url\(\'(.+)\'\);$", style, flags=0)
-        item.setArt({'poster': it.group(1)})
-        items.append((plugin.url_for(a['href'].encode('utf-8')), item, True))
+        a = li.find_all('a')
+        path = a[0]['href'].encode('utf-8')
+        anime = get_anime_detail(path)
+        item = ListItem(anime['title'] + " " + a[len(a)-1].string.encode('utf-8'))
+        item.setArt({'poster': anime.pop('poster')})
+        item.setInfo("video", anime)
+        items.append((plugin.url_for(path), item, True))
         
     
     item = ListItem("Next >>")
@@ -172,6 +170,7 @@ def on_going():
         item = ListItem("Back to main page")
         items.append((plugin.url_for("/"), item, True))
 
+    InternalDatabase.close()
     xbmcplugin.setContent(plugin.handle, 'videos')
     xbmcplugin.addDirectoryItems(plugin.handle, items, len(items))
     xbmcplugin.endOfDirectory(plugin.handle)
@@ -181,6 +180,7 @@ def on_going():
 @plugin.route(r"^/genre/([^&].+)\?page=[0-9]+$")
 @plugin.route(r'^/popular.html\?page=[0-9]+$')
 def genericList():
+    InternalDatabase.connect()
     if "/search.html" == plugin.path and "keyword" not in plugin.query:
         keyboard = Keyboard()
         keyboard.doModal()
@@ -198,10 +198,15 @@ def genericList():
     items = []
     for li in document.find_all('li'):
             a = li.find('a')
-            item = ListItem(a['title'].encode('utf-8').strip())
-            item.setArt({'poster': a.find('img')['src']})
-            item.setInfo("video", {'year': int(li.find('p', class_="released").string.strip()[-4:])})
-            items.append((plugin.url_for(a['href'].encode('utf-8')), item, True))
+            path = a['href'].encode('utf-8')
+            anime = get_anime_detail(path)
+            # item = ListItem(a['title'].encode('utf-8').strip())
+            # item.setArt({'poster': a.find('img')['src']})
+            # item.setInfo("video", {'year': int(li.find('p', class_="released").string.strip()[-4:])})
+            item = ListItem(anime['title'])
+            item.setArt({'poster': anime.pop('poster')})
+            item.setInfo("video", anime)
+            items.append((plugin.url_for(path), item, True))
     
     item = ListItem("Next >>")
     if "/search.html" == plugin.path:
@@ -215,6 +220,7 @@ def genericList():
         item = ListItem("Back to main page")
         items.append((plugin.url_for("/"), item, True))
 
+    InternalDatabase.close()
     xbmcplugin.setContent(plugin.handle, 'videos')
     xbmcplugin.addDirectoryItems(plugin.handle, items, len(items))
     xbmcplugin.endOfDirectory(plugin.handle)
@@ -224,9 +230,9 @@ def genericList():
 def category():
     response = request(plugin.path)
     items = []
+    # plot = document.find('div', class_="anime_info_body_bg").find_all('p', class_="type")[1].contents[1]
     document = BeautifulSoup(response.text, 'html.parser')
-    plot = document.find('div', class_="anime_info_body_bg").find_all('p', class_="type")[1].contents[1]
-    document = BeautifulSoup(response.text, 'html.parser')
+    title = document.find('div', class_="anime_info_body_bg").find('h1').string.encode('utf-8')
     for script in document.find_all('script'):
         if script.string is not None:
             it = re.search("var base_url_cdn_api = \'(.+)\'", script.string, flags=0)
@@ -251,8 +257,9 @@ def category():
             a = li.find('a')
             div = a.find('div', class_="name")
             name = div.contents[0].string + div.contents[1]
-            item = ListItem(name)
-            item.setInfo('video', {'plot': plot, 'title': name})
+            epTitle = title + " " + name.encode('utf-8')
+            item = ListItem(epTitle)
+            item.setInfo('video', {"title": epTitle})
             item.setProperty('IsPlayable', 'true')
             items.append((plugin.url_for(a['href'].strip()), item, False))
 
@@ -336,6 +343,38 @@ def play_episode():
     #                 c-=1
     #             it = re.search("sources:\[{src:\"(.+)\",type", p, flags=0)
     #             return it.group(1)
+
+def get_anime_detail(path):
+    anime = InternalDatabase.fetchone(path)
+
+    if anime is None:
+        response = request(path)
+        document = BeautifulSoup(response.text, 'html.parser').find('div', class_="anime_info_body_bg")
+        img = document.find('img')['src'].encode('utf-8').strip()
+        title = document.find('h1').string.encode('utf-8').strip()
+        pList = document.find_all('p', class_="type")
+        plot = pList[1].contents[1].encode('utf-8').strip()
+
+        genre = ""
+        for a in pList[2].find_all('a'):
+            genre += a.string.encode('utf-8')
+        try:
+            year = pList[3].contents[1].encode('utf-8').strip()
+            year = int(year) if year.isdigit() else None
+        except IndexError:
+            year = None
+        status = pList[4].contents[1].encode('utf-8').strip()
+
+        InternalDatabase.add((path,
+                              img,
+                              title,
+                              plot,
+                              genre,
+                              status,
+                              year))
+        anime = InternalDatabase.fetchone(path)
+
+    return anime
 
 def request(path):
     response = session.get(domain + path)
