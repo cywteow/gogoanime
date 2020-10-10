@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 from requests import Session
 from rerouting import Rerouting
-from resources.lib.database import InternalDatabase
+from resources.lib.database import InternalDatabase, ExternalDatabase
 from xbmc import Keyboard
 from xbmcgui import Dialog, ListItem
 
@@ -27,6 +27,7 @@ print(', '.join("%s: %s" % item for item in attrs.items()))
 @plugin.route('/')
 def index():
     items = [
+        (plugin.url_for('/recently-viewed'), ListItem("Recently viewed"), True),
         (plugin.url_for('/?page=1'), ListItem("Recent Release"), True),
         (plugin.url_for('/ajax/page-recent-release-ongoing.html?page=1'), ListItem("Popular Ongoing Update"), True),
         (plugin.url_for('/popular.html?page=1'), ListItem("Popular Anime"), True),
@@ -38,6 +39,35 @@ def index():
     xbmcplugin.setContent(plugin.handle, 'videos')
     xbmcplugin.addDirectoryItems(plugin.handle, items, len(items))
     xbmcplugin.endOfDirectory(plugin.handle)
+
+@plugin.route(r'/recently-viewed(\?delete=(?P<delete>[^&]+))?')
+def recently_viewed(delete=None):
+    ExternalDatabase.connect()
+    InternalDatabase.connect()
+
+    if delete is not None:
+        ExternalDatabase.remove(delete)
+        xbmc.executebuiltin('Container.Refresh')
+    else:
+        items = []
+
+        for path in ExternalDatabase.fetchall():
+            anime = get_anime_detail(path)
+            item = ListItem(anime['title'])
+            item.addContextMenuItems([
+                ("Remove", 'RunPlugin(plugin://plugin.video.gogoanime/recently-viewed?delete=' + path + ')'),
+                ("Remove all", 'RunPlugin(plugin://plugin.video.gogoanime/recently-viewed?delete=%)')
+            ])
+            item.setArt({'poster': anime.pop('poster')})
+            item.setInfo('video', anime)
+            items.append((plugin.url_for(path), item, True))
+
+        xbmcplugin.setContent(plugin.handle, 'videos')
+        xbmcplugin.addDirectoryItems(plugin.handle, items, len(items))
+        xbmcplugin.endOfDirectory(plugin.handle)
+
+    ExternalDatabase.close()
+    InternalDatabase.close()
 
 @plugin.route(r'^/season\?year=[0-9]+$')
 @plugin.route('^/season$')
@@ -228,6 +258,9 @@ def genericList():
 
 @plugin.route('/category/.+')
 def category():
+    ExternalDatabase.connect()
+    ExternalDatabase.add(plugin.path)
+    ExternalDatabase.close()
     response = request(plugin.path)
     items = []
     # plot = document.find('div', class_="anime_info_body_bg").find_all('p', class_="type")[1].contents[1]
