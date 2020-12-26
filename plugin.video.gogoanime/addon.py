@@ -4,6 +4,7 @@ from requests import Session
 from rerouting import Rerouting
 from resources.lib.database import InternalDatabase, ExternalDatabase
 from xbmc import Keyboard
+from xbmcaddon import Addon
 from xbmcgui import Dialog, ListItem
 
 import json
@@ -15,7 +16,7 @@ import xbmc
 import xbmcplugin
 import resolveurl
 
-
+__plugins__ = os.path.join(xbmc.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
 domain = 'https://www2.gogoanime.video'
 domain2 = 'https://ajax.apimovie.xyz'
 plugin = Rerouting()
@@ -307,75 +308,82 @@ def play_episode():
     document = BeautifulSoup(response.text, 'html.parser')
     sources = []
     for server in document.find('div', class_="anime_muti_link").find_all('a'):
-        source = ListItem(server.contents[1])
+        if server.contents[1].name == 'i':
+            title = server.contents[2]
+        else:
+            title = server.contents[1]
+        source = ListItem(title)
         source.setProperty("data-video", server['data-video'])
-        sources.append(source)
+        if not 'hydrax' in server['data-video'] and not 'mp4upload' in server['data-video']:
+            sources.append(source)
     position = Dialog().select("Choose server", sources)
 
     if position != -1:
-        
         # resolvedUrl = resolveUrl(sources[position].getProperty("data-video"))
-        xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=resolveurl.resolve(sources[position].getProperty("data-video"))))
+        resolveurl.add_plugin_dirs(__plugins__)
+        url = resolveurl.resolve(sources[position].getProperty("data-video"))
+        print(url)
+        xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=url))
 
 # def resolveUrl(url):
-    # servers = {
-    #     "VIDSTREAMING": "vidstreaming.io/streaming.php",
-    #     "GOGOSERVER": "vidstreaming.io/load.php?id",
-    #     "XSTREAMCDN": "fcdn.stream",
-    #     "MIXDROP": "mixdrop.co",
-    #     "CLOUD9": "cloud9.to",
-    #     "MP4UPLOAD": "mp4upload.com"
-    # }
+#     servers = {
+#         "VIDSTREAMING": "vidstreaming.io/streaming.php?id=NzEzMDM=&title=Hundred+Episode+1&typesub=SUB",
+#         "GOGOSERVER": "vidstreaming.io/load.php?id",
+#         "XSTREAMCDN": "fcdn.stream",
+#         "MIXDROP": "mixdrop.co",
+#         "CLOUD9": "cloud9.to",
+#         "MP4UPLOAD": "mp4upload.com"
+#     }
     
 
-    # if servers["VIDSTREAMING"] in url:
-    #     response = requests.get(url)
-    #     document = BeautifulSoup(response.text, 'html.parser')
-    #     id = document.find('input', id="id")['value']
-    #     title = document.find('input', id="title")['value']
-    #     typesub = document.find('input', id="typesub")['value']
-    #     parsed_url = urlparse.urlparse(response.url)
-    #     url = parsed_url.scheme+"://"+parsed_url.hostname+ "/ajax.php?id=" + id+ "&title=" + title +"&typesub=" + typesub
-    #     response2 = requests.get(url)
-    #     jsonObj = json.loads(response2.text)
-    #     return jsonObj['source_bk'][0]['file']
+#     if servers["VIDSTREAMING"] in url:
+#         response = requests.get(url)
+#         document = BeautifulSoup(response.text, 'html.parser')
+#         id = document.find('input', id="id")['value']
+#         title = document.find('input', id="title")['value']
+#         typesub = document.find('input', id="typesub")['value']
+#         parsed_url = urlparse.urlparse(response.url)
+#         url = parsed_url.scheme+"://"+parsed_url.hostname+ "/ajax.php?id=" + id+ "&title=" + title +"&typesub=" + typesub
+#         response2 = requests.get(url)
+#         jsonObj = json.loads(response2.text)
+#         return jsonObj['source_bk'][0]['file']
 
-    # elif servers["GOGOSERVER"] in url:
-    #     response = requests.get(url)
-    #     document = BeautifulSoup(response.text, 'html.parser')
-    #     script = document.find('div', class_="videocontent").find('script', type="text/JavaScript")
-    #     it = re.search("sources:\[{file: \'(.+)\',label:", script.string, flags=0)
-    #     if it is not None:
-    #         url = it.group(1)
+#     elif servers["GOGOSERVER"] in url:
+#         response = requests.get(url)
+#         document = BeautifulSoup(response.text, 'html.parser')
+#         script = document.find('div', class_="videocontent").find('script', type="text/JavaScript")
+#         it = re.search("sources:\[{file: \'(.+)\',label:", script.string, flags=0)
+#         if it is not None:
+#             url = it.group(1)
 
-    #     response2 = requests.get(url, allow_redirects=False)
-    #     return response2.headers['Location']
+#         response2 = requests.get(url, allow_redirects=False)
+#         return response2.headers['Location']
 
-    # elif servers["XSTREAMCDN"] in url:
-    #     parsedUrl = urlparse.urlparse(url).path.split("/")[-1:][0]
-    #     response = requests.post("https://fcdn.stream/api/source/"+ parsedUrl)
-    #     jsonObj = json.loads(response.text)
-    #     requestUrl = jsonObj['data'][0]['file']
-    #     response2 = requests.get(requestUrl, allow_redirects=False)
-    #     return response2.headers['Location']
+#     elif servers["XSTREAMCDN"] in url:
+#         parsedUrl = urlparse.urlparse(url).path.split("/")[-1:][0]
+#         response = requests.post("https://fcdn.stream/api/source/"+ parsedUrl)
+#         jsonObj = json.loads(response.text)
+#         requestUrl = jsonObj['data'][0]['file']
+#         response2 = requests.get(requestUrl, allow_redirects=False)
+#         return response2.headers['Location']
 
-    # elif servers["MP4UPLOAD"] in url:
-    #     response = requests.get(url)
-    #     document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
-    #     for script in document:
-    #         if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
-    #             it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
-    #             p = it.group(2)
-    #             a = int(it.group(3))
-    #             c = int(it.group(4))
-    #             k = it.group(5).split("|")
-    #             c-=1
-    #             while c > 0:
-    #                 if k[c] is not None:
-    #                     p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
-    #                 c-=1
-    #             it = re.search("sources:\[{src:\"(.+)\",type", p, flags=0)
-    #             return it.group(1)
+#     elif servers["MP4UPLOAD"] in url:
+#         response = requests.get(url)
+#         document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
+#         for script in document:
+#             if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
+#                 it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
+#                 p = it.group(2)
+#                 a = int(it.group(3))
+#                 c = int(it.group(4))
+#                 k = it.group(5).split("|")
+#                 c-=1
+#                 while c > 0:
+#                     if k[c] is not None:
+#                         p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
+#                     c-=1
+#                 it = re.search("sources:\[{src:\"(.+)\",type", p, flags=0)
+#                 return it.group(1)
 
 def get_anime_detail(path):
     anime = InternalDatabase.fetchone(path)
@@ -413,12 +421,14 @@ def request(path):
     response = session.get(domain + path)
 
     if response.status_code == 200:
+        response.encoding = 'utf-8'
         return response
 
 def request2(path):
     response = session.get(domain2 + path)
 
     if response.status_code == 200:
+        response.encoding = 'utf-8'
         return response
 
 if __name__ == '__main__':

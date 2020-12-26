@@ -12,14 +12,11 @@ session = Session()
 
 domain = 'https://www2.gogoanime.video'
 
-# def request(path):
-#     response = session.get(domain + path)
+def request(path):
+    response = session.get(domain + path)
 
-
-#     if response.status_code == 200:
-#         return response
-#     elif response.status_code == 301:
-#         get_redirect_target(response)
+    if response.status_code == 200:
+        return response
 
 # Recent release
 # response = request("/?page=1")
@@ -121,26 +118,63 @@ domain = 'https://www2.gogoanime.video'
 # response = requests.get("https://www2.gogoanime.video/genre/action?page=1")
 # document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes")
 
-#category
-response = requests.get("https://www2.gogoanime.video/category/boruto-naruto-next-generations")
-document = BeautifulSoup(response.text, 'html.parser').find('div', class_="anime_info_body_bg")
-img = document.find('img')['src'].encode('utf-8').strip()
-title = document.find('h1').string.encode('utf-8').strip()
-pList = document.find_all('p', class_="type")
-plot = pList[1].contents[1].encode('utf-8').strip()
+# #category
+# response = requests.get("https://www2.gogoanime.video/category/boruto-naruto-next-generations")
+# document = BeautifulSoup(response.text, 'html.parser').find('div', class_="anime_info_body_bg")
+# img = document.find('img')['src'].encode('utf-8').strip()
+# title = document.find('h1').string.encode('utf-8').strip()
+# pList = document.find_all('p', class_="type")
+# plot = pList[1].contents[1].encode('utf-8').strip()
 
-genre = ""
-for a in pList[2].find_all('a'):
-    genre += a.string.encode('utf-8')
-try:
-    year = pList[3].contents[1].encode('utf-8').strip()
-    year = int(year) if year.isdigit() else None
-except IndexError:
-    year = None
-status = pList[4].contents[1].encode('utf-8').strip()
+# genre = ""
+# for a in pList[2].find_all('a'):
+#     genre += a.string.encode('utf-8')
+# try:
+#     year = pList[3].contents[1].encode('utf-8').strip()
+#     year = int(year) if year.isdigit() else None
+# except IndexError:
+#     year = None
+# status = pList[4].contents[1].encode('utf-8').strip()
 
+def int2base(x, base):
+    if x < 0:
+        sign = -1
+    elif x == 0:
+        return digs[0]
+    else:
+        sign = 1
 
+    x *= sign
+    digits = []
 
+    while x:
+        digits.append(digs[int(x % base)])
+        x = int(x / base)
+
+    if sign < 0:
+        digits.append('-')
+
+    digits.reverse()
+
+    return ''.join(digits)
+
+response = requests.get("https://www.mp4upload.com/embed-m380e4rz6c19.html")
+document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
+for script in document:
+    if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
+        it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
+        p = it.group(2)
+        a = int(it.group(3))
+        c = int(it.group(4))
+        k = it.group(5).split("|")
+        c-=1
+        while c > 0:
+            if k[c] is not None:
+                p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
+            c-=1
+        print(p)
+        it = re.search(r'player.src\("([^)]+)"\)', p, flags=0)
+        print(it.group(1))
 
 
 
