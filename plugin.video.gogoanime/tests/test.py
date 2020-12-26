@@ -16,22 +16,26 @@ def request(path):
     response = session.get(domain + path)
 
     if response.status_code == 200:
+        response.encoding = 'utf-8'
         return response
 
 # Recent release
-# response = request("/?page=1")
-# document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes loaddub")
-# items = []
-# for li in document.find_all('li'):
-#     a = li.find('a')
-#     print("Title: "+ a['title'].encode('utf-8'))
-#     print("Img: "+ li.find('img')['src'])
-#     response2 = request(a['href'])
-#     document2 = BeautifulSoup(response2.text, 'html.parser').find('div', class_="anime-info").find('a')
-#     print("Path: "+ document2['href'])
-#     response3 = request(document2['href'])
-#     document3 = BeautifulSoup(response3.text, 'html.parser').find('div', class_="anime_info_body_bg")
-#     print("Plot: "+ document3.find_all('p', class_="type")[1].contents[1].encode('utf-8'))
+response = request("/?page=1")
+document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes loaddub")
+items = []
+for li in document.find_all('li'):
+    a = li.find('a')
+    print(a['href'])
+    it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'].encode('utf-8'), flags=0)
+    path = "/category"+it.group(1).encode('utf-8')
+    # print("Title: "+ a['title'].encode('utf-8'))
+    # print("Img: "+ li.find('img')['src'])
+    # response2 = request(a['href'])
+    # document2 = BeautifulSoup(response2.text, 'html.parser').find('div', class_="anime-info").find('a')
+    # print("Path: "+ document2['href'])
+    # response3 = request(document2['href'])
+    # document3 = BeautifulSoup(response3.text, 'html.parser').find('div', class_="anime_info_body_bg")
+    # print("Plot: "+ document3.find_all('p', class_="type")[1].contents[1].encode('utf-8'))
 
 # Category
 # response = request("/category/black-clover-tv")
@@ -136,45 +140,45 @@ def request(path):
 #     year = None
 # status = pList[4].contents[1].encode('utf-8').strip()
 
-def int2base(x, base):
-    if x < 0:
-        sign = -1
-    elif x == 0:
-        return digs[0]
-    else:
-        sign = 1
+# def int2base(x, base):
+#     if x < 0:
+#         sign = -1
+#     elif x == 0:
+#         return digs[0]
+#     else:
+#         sign = 1
 
-    x *= sign
-    digits = []
+#     x *= sign
+#     digits = []
 
-    while x:
-        digits.append(digs[int(x % base)])
-        x = int(x / base)
+#     while x:
+#         digits.append(digs[int(x % base)])
+#         x = int(x / base)
 
-    if sign < 0:
-        digits.append('-')
+#     if sign < 0:
+#         digits.append('-')
 
-    digits.reverse()
+#     digits.reverse()
 
-    return ''.join(digits)
+#     return ''.join(digits)
 
-response = requests.get("https://www.mp4upload.com/embed-m380e4rz6c19.html")
-document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
-for script in document:
-    if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
-        it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
-        p = it.group(2)
-        a = int(it.group(3))
-        c = int(it.group(4))
-        k = it.group(5).split("|")
-        c-=1
-        while c > 0:
-            if k[c] is not None:
-                p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
-            c-=1
-        print(p)
-        it = re.search(r'player.src\("([^)]+)"\)', p, flags=0)
-        print(it.group(1))
+# response = requests.get("https://www.mp4upload.com/embed-m380e4rz6c19.html")
+# document = BeautifulSoup(response.text, 'html.parser').find_all('script', type="text/javascript")
+# for script in document:
+#     if script.string is not None and "eval(function(p,a,c,k,e,d)" in script.string:
+#         it = re.search(r"^eval\(function\(p,a,c,k,e,d\)(.+)\('(.+)',([0-9]+),([0-9]+),'(.+)'\.split\('\|'\)\)\)", script.string, flags=0)
+#         p = it.group(2)
+#         a = int(it.group(3))
+#         c = int(it.group(4))
+#         k = it.group(5).split("|")
+#         c-=1
+#         while c > 0:
+#             if k[c] is not None:
+#                 p = re.sub("\\b"+int2base(c, a)+"\\b", k[c], p)
+#             c-=1
+#         print(p)
+#         it = re.search(r'player.src\("([^)]+)"\)', p, flags=0)
+#         print(it.group(1))
 
 
 
