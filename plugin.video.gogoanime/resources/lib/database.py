@@ -3,8 +3,9 @@ from xbmcaddon import Addon
 import os
 import sqlite3
 import xbmc
+import xbmcvfs
 
-__profile__ = xbmc.translatePath(Addon().getAddonInfo('profile'))
+__profile__ = xbmcvfs.translatePath(Addon().getAddonInfo('profile'))
 
 if not os.path.exists(__profile__):
     os.makedirs(__profile__)
@@ -58,7 +59,7 @@ class ExternalDatabase:
 class InternalDatabase:
     _connection = None
     _cursor = None
-    _database = os.path.join(xbmc.translatePath(Addon().getAddonInfo('path')), 'resources/data/anime.db')
+    _database = os.path.join(xbmcvfs.translatePath(Addon().getAddonInfo('path')), 'resources/data/anime.db')
 
     @classmethod
     def add(cls, values):

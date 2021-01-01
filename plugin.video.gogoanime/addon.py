@@ -8,15 +8,16 @@ from xbmcaddon import Addon
 from xbmcgui import Dialog, ListItem
 
 import json
-import urlparse
+from urllib.parse import urlparse
 import requests
 import os
 import re
 import xbmc
 import xbmcplugin
 import resolveurl
+import xbmcvfs
 
-__plugins__ = os.path.join(xbmc.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
+__plugins__ = os.path.join(xbmcvfs.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
 domain = 'https://www2.gogoanime.video'
 domain2 = 'https://ajax.apimovie.xyz'
 plugin = Rerouting()
@@ -159,10 +160,10 @@ def recent_release():
     for li in document.find_all('li'):
         a = li.find('a')
         p = li.find('p', class_="episode")
-        it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'].encode('utf-8'), flags=0)
-        path = "/category"+it.group(1).encode('utf-8')
+        it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'], flags=0)
+        path = "/category"+it.group(1)
         anime = get_anime_detail(path)
-        item = ListItem(anime['title'] + " " + p.string.encode('utf-8'))
+        item = ListItem(anime['title'] + " " + p.string)
         item.setArt({'poster': anime.pop('poster')})
         item.setInfo("video", anime)
         items.append((plugin.url_for(path), item, True))
@@ -187,9 +188,9 @@ def on_going():
     items = []
     for li in document.find_all('li'):
         a = li.find_all('a')
-        path = a[0]['href'].encode('utf-8')
+        path = a[0]['href']
         anime = get_anime_detail(path)
-        item = ListItem(anime['title'] + " " + a[len(a)-1].string.encode('utf-8'))
+        item = ListItem(anime['title'] + " " + a[len(a)-1].string)
         item.setArt({'poster': anime.pop('poster')})
         item.setInfo("video", anime)
         items.append((plugin.url_for(path), item, True))
@@ -229,11 +230,8 @@ def genericList():
     items = []
     for li in document.find_all('li'):
             a = li.find('a')
-            path = a['href'].encode('utf-8')
+            path = a['href']
             anime = get_anime_detail(path)
-            # item = ListItem(a['title'].encode('utf-8').strip())
-            # item.setArt({'poster': a.find('img')['src']})
-            # item.setInfo("video", {'year': int(li.find('p', class_="released").string.strip()[-4:])})
             item = ListItem(anime['title'])
             item.setArt({'poster': anime.pop('poster')})
             item.setInfo("video", anime)
@@ -266,7 +264,7 @@ def category():
     items = []
     # plot = document.find('div', class_="anime_info_body_bg").find_all('p', class_="type")[1].contents[1]
     document = BeautifulSoup(response.text, 'html.parser')
-    title = document.find('div', class_="anime_info_body_bg").find('h1').string.encode('utf-8')
+    title = document.find('div', class_="anime_info_body_bg").find('h1').string
     for script in document.find_all('script'):
         if script.string is not None:
             it = re.search("var base_url_cdn_api = \'(.+)\'", script.string, flags=0)
@@ -291,7 +289,7 @@ def category():
             a = li.find('a')
             div = a.find('div', class_="name")
             name = div.contents[0].string + div.contents[1]
-            epTitle = title + " " + name.encode('utf-8')
+            epTitle = title + " " + name
             item = ListItem(epTitle)
             item.setInfo('video', {"title": epTitle})
             item.setProperty('IsPlayable', 'true')
@@ -391,20 +389,20 @@ def get_anime_detail(path):
     if anime is None:
         response = request(path)
         document = BeautifulSoup(response.text, 'html.parser').find('div', class_="anime_info_body_bg")
-        img = document.find('img')['src'].encode('utf-8').strip()
-        title = document.find('h1').string.encode('utf-8').strip()
+        img = document.find('img')['src'].strip()
+        title = document.find('h1').string.strip()
         pList = document.find_all('p', class_="type")
-        plot = pList[1].contents[1].encode('utf-8').strip()
+        plot = pList[1].contents[1].strip()
 
         genre = ""
         for a in pList[2].find_all('a'):
-            genre += a.string.encode('utf-8')
+            genre += a.string
         try:
-            year = pList[3].contents[1].encode('utf-8').strip()
+            year = pList[3].contents[1].strip()
             year = int(year) if year.isdigit() else None
         except IndexError:
             year = None
-        status = pList[4].contents[1].encode('utf-8').strip()
+        status = pList[4].contents[1].strip()
 
         InternalDatabase.add((path,
                               img,
