@@ -159,8 +159,10 @@ def recent_release():
     for li in document.find_all('li'):
         a = li.find('a')
         p = li.find('p', class_="episode")
-        it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'].encode('utf-8'), flags=0)
-        path = "/category"+it.group(1).encode('utf-8')
+        # it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'].encode('utf-8'), flags=0)
+        response = request(a['href'])
+        path = BeautifulSoup(response.text, 'html.parser').find('div', class_="anime-info").find('a')['href']
+        # path = "/category"+it.group(1).encode('utf-8')
         anime = get_anime_detail(path)
         item = ListItem(anime['title'] + " " + p.string.encode('utf-8'))
         item.setArt({'poster': anime.pop('poster')})
@@ -394,7 +396,8 @@ def get_anime_detail(path):
         img = document.find('img')['src'].encode('utf-8').strip()
         title = document.find('h1').string.encode('utf-8').strip()
         pList = document.find_all('p', class_="type")
-        plot = pList[1].contents[1].encode('utf-8').strip()
+
+        plot = pList[1].contents[1].encode('utf-8').strip() if len(pList[1].contents) >= 2 else ''
 
         genre = ""
         for a in pList[2].find_all('a'):
