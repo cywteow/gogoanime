@@ -26,10 +26,21 @@ from resolveurl.plugins.__resolve_generic__ import ResolveGeneric
 class SteamaniResolver(ResolveGeneric):
     name = "streamani"
     domains = ['streamani.net']
-    pattern = r'(?://|\.)(streamani\.net)/(?:streaming|embed|load)\.php\?id=([a-zA-Z0-9]+)'
+    pattern = r'(?://|\.)(streamani\.net)/(?:load)\.php\?id=([a-zA-Z0-9]+)'
+
+    def get_media_url(self, host, media_id):
+        web_url = self.get_url(host, media_id)
+        headers = {'User-Agent': common.FF_USER_AGENT,
+                   'Referer': 'https://{0}/'.format(host)}
+        r = self.net.http_GET(web_url, headers=headers)
+        src = re.search(r'sources:\[{file: \'(.*)\',label:', r.content)
+        if src:
+            return src.group(1)
+        raise ResolverError('Video cannot be located.')
 
     def get_url(self, host, media_id):
-        return self._default_get_url(host, media_id, template='https://{host}/ajax.php?id={media_id}')
+        return self._default_get_url(host, media_id, template='https://{host}/load.php?id={media_id}')
+
 
     @classmethod
     def _is_enabled(cls):

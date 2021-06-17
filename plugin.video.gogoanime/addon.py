@@ -314,7 +314,9 @@ def play_episode():
             title = server.contents[1]
         source = ListItem(title)
         source.setProperty("data-video", server['data-video'])
-        if not 'hydrax' in server['data-video'] and not 'mp4upload' in server['data-video']:
+        # if not 'hydrax' in server['data-video'] and not 'mp4upload' in server['data-video']:
+        print(server['data-video'])
+        if 'streamani.net/load.php' in server['data-video'] or 'streamani.net/streaming.php' in server['data-video']:
             sources.append(source)
     position = Dialog().select("Choose server", sources)
 
