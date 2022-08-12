@@ -228,7 +228,7 @@ def genericList():
         response = request(plugin.pathqs)
 
     pageNum = int(plugin.query['page'][0])
-    document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes")
+    document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes").find('ul', class_="items")
     items = []
     for li in document.find_all('li'):
             a = li.find('a')
