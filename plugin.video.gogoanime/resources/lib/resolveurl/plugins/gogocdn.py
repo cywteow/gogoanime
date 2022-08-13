@@ -37,7 +37,9 @@ class GogoCdnResolver(ResolveGeneric):
         if response.status_code == 200:
             result = response.json()
             if "sources" in result and len(result["sources"]) > 0:
-                return result["sources"][0]["url"]
+                for source in result["sources"]:
+                    if "gogocdn.stream" in source["url"]:
+                        return source["url"]
         raise ResolverError('Video cannot be located.')
 
     def get_url(self, host, media_id):
