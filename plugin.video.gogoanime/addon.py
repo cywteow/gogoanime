@@ -31,6 +31,7 @@ def index():
     items = [
         (plugin.url_for('/recently-viewed'), ListItem("Recently viewed"), True),
         (plugin.url_for('/?page=1'), ListItem("Recent Release"), True),
+        (plugin.url_for('/new-season.html?page=1'), ListItem("New Season"), True),
         (plugin.url_for('/ajax/page-recent-release-ongoing.html?page=1'), ListItem("Popular Ongoing Update"), True),
         (plugin.url_for('/popular.html?page=1'), ListItem("Popular Anime"), True),
         (plugin.url_for('/list_genres'), ListItem("View By Genres"), True),
@@ -83,6 +84,8 @@ def year():
         ]
     else:
         items = [
+            (plugin.url_for('/season?year=2022'), ListItem("2022"), True),
+            (plugin.url_for('/season?year=2021'), ListItem("2021"), True),
             (plugin.url_for('/season?year=2020'), ListItem("2020"), True),
             (plugin.url_for('/season?year=2019'), ListItem("2019"), True),
             (plugin.url_for('/season?year=2018'), ListItem("2018"), True),
@@ -213,6 +216,7 @@ def on_going():
 @plugin.route(r"^/sub-category/([^&].+)\?page=[0-9]+$")
 @plugin.route(r"^/genre/([^&].+)\?page=[0-9]+$")
 @plugin.route(r'^/popular.html\?page=[0-9]+$')
+@plugin.route(r'^/new-season.html\?page=[0-9]+$')
 def genericList():
     InternalDatabase.connect()
     if "/search.html" == plugin.path and "keyword" not in plugin.query:
