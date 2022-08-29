@@ -17,7 +17,7 @@ import xbmcplugin
 import resolveurl
 import xbmcvfs
 
-__plugins__ = os.path.join(xbmcvfs.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
+# __plugins__ = os.path.join(xbmcvfs.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
 domain = 'https://www2.gogoanime.video'
 domain2 = 'https://ajax.apimovie.xyz'
 plugin = Rerouting()
@@ -310,9 +310,9 @@ def category():
 def play_episode():
     response = request(plugin.path)
     document = BeautifulSoup(response.text, 'html.parser')
-    resolveurl.add_plugin_dirs(__plugins__)
+    # resolveurl.add_plugin_dirs(__plugins__)
     sources = []
-    sources.append(resolveurl.HostedMediaFile(url=domain + plugin.path, title="GoGoCdn"))
+    # sources.append(resolveurl.HostedMediaFile(url=domain + plugin.path, title="GoGoCdn"))
     for server in document.find('div', class_="anime_muti_link").find_all('a'):
         if server.contents[1].name == 'i':
             title = server.contents[2]
@@ -332,16 +332,14 @@ def play_episode():
     #     url = resolveurl.resolve(sources[position].getProperty("data-video"))
     #     print(url)
     #     xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=url))
-        if title != "Vidstreaming" and title != "Gogo server":
-            sources.append(resolveurl.HostedMediaFile(url=server['data-video'], title=title))
+
+        # if title != "Vidstreaming" and title != "Gogo server":
+        sources.append(resolveurl.HostedMediaFile(url=server['data-video'], title=title))
     
     sources = resolveurl.filter_source_list(sources)
     source = resolveurl.choose_source(sources)
     if source:
-            print("selectedSource")
-            print(source)
             url = source.resolve()
-            print(url)
             xbmcplugin.setResolvedUrl(plugin.handle, True, ListItem(path=url))
 
 

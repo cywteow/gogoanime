@@ -1,33 +1,43 @@
 from requests import Session
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import re
 import requests
-import urlparse
+# import urlparse
 import json
 import string
 
-digs = string.digits + string.ascii_letters
+# digs = string.digits + string.ascii_letters
 
-session = Session()
+# session = Session()
 
-domain = 'https://www2.gogoanime.video'
+# domain = 'https://www2.gogoanime.video'
 
-def request(path):
-    response = session.get(domain + path)
+# def request(path):
+#     response = session.get(domain + path)
 
-    if response.status_code == 200:
-        response.encoding = 'utf-8'
-        return response
+#     if response.status_code == 200:
+#         response.encoding = 'utf-8'
+#         return response
+
+# def request2(path):
+#     headers = {'Referer': 'https://gogoplay1.com/'}
+#     response = session.get(path, headers=headers, allow_redirects=False)
+
+#     if response.status_code == 302:
+#         return response
+#     if response.status_code == 200:
+#         response.encoding = 'utf-8'
+#         return response
 
 # Recent release
-response = request("/?page=1")
-document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes loaddub")
-items = []
-for li in document.find_all('li'):
-    a = li.find('a')
-    print(a['href'])
-    it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'].encode('utf-8'), flags=0)
-    path = "/category"+it.group(1).encode('utf-8')
+# response = request("/?page=1")
+# document = BeautifulSoup(response.text, 'html.parser').find('div', class_="last_episodes loaddub")
+# items = []
+# for li in document.find_all('li'):
+#     a = li.find('a')
+#     print(a['href'])
+#     it = re.search("^(/.+)-episode-([0-9/-]+)$", a['href'].encode('utf-8'), flags=0)
+#     path = "/category"+it.group(1).encode('utf-8')
     # print("Title: "+ a['title'].encode('utf-8'))
     # print("Img: "+ li.find('img')['src'])
     # response2 = request(a['href'])
@@ -180,5 +190,20 @@ for li in document.find_all('li'):
 #         it = re.search(r'player.src\("([^)]+)"\)', p, flags=0)
 #         print(it.group(1))
 
+# response = request("/boruto-naruto-next-generations-episode-111")
+# document = BeautifulSoup(response.text, 'html.parser')
+# for server in document.find('div', class_="anime_muti_link").find_all('a'):
+#         if server.contents[1].name == 'i':
+#             title = server.contents[2]
+#         else:
+#             title = server.contents[1]
+#         print(server["data-video"])
 
 
+# response = request2('https://gogo-cdn.com/download.php?url=aHR0cHM6LyAdeqwrwedffryretgsdFrsftrsvfsfsr9jZG4yMyAawehyfcghysfdsDGDYdgdsfsdfwstdgdsgtert5hbmljZG4uc3RyZWFtL3VzZXIxMzQyL2RlNDhhMGViNjBmZmUwMGQ4YmMyNTM5YTg3NWEzNjVkL0VQLjIyNC52MC40ODBwLm1wND90b2tlbj1ZLVFnRHByQW5BRHZ2Xzc4NWdoTU9nJmV4cGlyZXM9MTYzNjkwNjIyNyZpZD0xNzQ1NDQ=')
+# print(response.headers['Location'])
+
+response = requests.get('https://consumet-api.herokuapp.com/anime/gogoanime/watch/dragon-quest-dai-no-daibouken-2020-episode-90')
+data = response.json()
+if "sources" in data and len(data["sources"]) > 0:
+    print(len(data["sources"]))
