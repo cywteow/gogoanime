@@ -18,8 +18,8 @@ import resolveurl
 import xbmcvfs
 
 # __plugins__ = os.path.join(xbmcvfs.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
-domain = 'https://www2.gogoanime.video'
-domain2 = 'https://ajax.apimovie.xyz'
+domain = 'https://www5.gogoanimes.fi'
+domain2 = 'https://ajax.gogo-load.com'
 plugin = Rerouting()
 session = Session()
 attrs = vars(plugin)
@@ -452,6 +452,7 @@ def request(path):
         return response
 
 def request2(path):
+    print(path)
     response = session.get(domain2 + path)
 
     if response.status_code == 200:
