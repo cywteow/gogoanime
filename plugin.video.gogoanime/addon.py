@@ -17,8 +17,8 @@ import xbmcplugin
 import resolveurl
 
 __plugins__ = os.path.join(xbmc.translatePath(Addon().getAddonInfo('path')), 'resources/lib/resolveurl/plugins')
-domain = 'https://www2.gogoanime.video'
-domain2 = 'https://ajax.apimovie.xyz'
+domain = 'https://gogoanime3.net'
+domain2 = 'https://ajax.gogo-load.com'
 plugin = Rerouting()
 session = Session()
 attrs = vars(plugin)
